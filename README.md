@@ -326,10 +326,12 @@ connectivity test. Everything is also plain JSON for scripting
 (`/__bili/stats`, `/__bili/sessions`, `/__bili/config`, …).
 
 **When does compression happen?** It is model-driven: the injected context
-tools are called by the model as context grows, gentle growth nudges
-(~50K-token steps by design, adjustable via `compress.nudgeGrowthTokens`)
-prompt it along the way, and preflight fires as a hard backstop when the input
-alone exceeds the window (#470). Watch it live with `/acp` or the web UI.
+ tools are called by the model as context grows, gentle growth nudges
+ (~50K-token steps by design, adjustable via `compress.nudgeGrowthTokens`, or
+ fully throughput-adaptive via `compress.nudgeAdaptive` so the step widens on
+ bulk file/log reads and narrows on quiet interactive turns) prompt it along the
+ way, and preflight fires as a hard backstop when the input alone exceeds the
+ window (#470). Watch it live with `/acp` or the web UI.
 
 **Is bili transparent? How do I turn it off?** Unrecognized endpoints forward
 unchanged ([CLIENTS.md](CLIENTS.md)), and every mode reverses cleanly:
