@@ -12,7 +12,7 @@ import {
     type CoreMessage,
     type InlineRestoreResult,
 } from "acp-kernel";
-import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve as resolvePath } from "node:path";
 import { tmpdir } from "node:os";
 import { markDirty, preCompactionArchiveOf, peekSession, findSessionByCanonicalId, type Session } from "./session.js";
@@ -20,7 +20,7 @@ import { getStore } from "./persist.js";
 import { ccrEnabled, contentStoreOf } from "./store.js";
 import { safePrefix } from "./text-safe.js";
 import { decompressTmpCap as knobDecompressTmpCap } from "./knobs.js";
-import { describeRestorable, writeRestoredImage } from "./image-restore.js";
+import { describeRestorable } from "./image-restore.js";
 
 /** Bounded retention for large-decompress temp files. Each decompress with
  *  body > 10000 writes one file under tmpdir(); the reaper unlinks oldest past
@@ -233,16 +233,19 @@ function resolveImageRestore(args: Record<string, unknown>, ctx: ProxyToolCtx): 
     if (!imgs || imgs.length === 0) {
         return `[decompress FAILED: no restorable image for ref "${raw}" (it carries no image, is URL-sourced with no stored bytes, or is not in this request's history). Call decompress({ imageRef: "list" }) to see what is available.]`;
     }
-    const written: string[] = [];
-    for (let i = 0; i < imgs.length; i++) {
-        const p = writeRestoredImage(raw, i, imgs[i]);
-        if (p) written.push(p);
+    // Files were spilled at index-time, so restoring is a pure lookup: return the
+    // stored paths (verifying presence), never re-decoding or re-writing bytes.
+    const paths: string[] = [];
+    let missing = 0;
+    for (const im of imgs) {
+        if (existsSync(im.path)) paths.push(im.path);
+        else missing++;
     }
-    if (written.length === 0) {
-        return `[decompress FAILED: could not write restored image(s) for "${raw}" to disk.]`;
+    if (paths.length === 0) {
+        return `[decompress FAILED: the restored image(s) for "${raw}" are no longer on disk (evicted/cleaned since indexing). They will be re-spilled automatically on the next request.]`;
     }
-    ctx.log(`[acp-image-restore] ${raw}: restored ${written.length} image(s) → ${written.join(", ")}`);
-    return `[Restored ${written.length} image(s) for ${raw}:\n${written.map((p) => `  ${p}`).join("\n")}\nOpen them with the read tool to view the pixels.]`;
+    ctx.log(`[acp-image-restore] ${raw}: located ${paths.length} image(s) at ${paths.join(", ")}${missing ? ` (${missing} missing)` : ""}`);
+    return `[Restored ${paths.length} image(s) for ${raw}:\n${paths.map((p) => `  ${p}`).join("\n")}\nOpen them with the read tool to view the pixels.${missing ? `\n(${missing} image(s) could not be located on disk.)` : ""}]`;
 }
 
 // #1294 P2: close the loop on an inline restore — kernel K2 updates the
