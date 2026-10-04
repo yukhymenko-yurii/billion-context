@@ -116,6 +116,7 @@ test("#1815: the full documented top-level surface produces no warning", () => {
                 logFile: "", compress: { promptPack: "lean" }, promptCache: {}, mitm: {}, maskHosts: true,
                 subagentSplit: true, forkAdoption: false, resumeInheritance: true,
                 chainContentDetection: true, chainEgressStamp: false, stableSystemAnchor: false,
+                allowDshCompaction: true,
                 compat: {}, imageBilling: "auto",
                 claude: { nativePort: 8901 }, native: { attachExternal: false },
             }),
