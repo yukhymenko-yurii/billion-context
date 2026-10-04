@@ -1362,6 +1362,9 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
     "subagentSplit", "forkAdoption", "resumeInheritance",
     "chainContentDetection", "chainEgressStamp", "stableSystemAnchor",
     "allowDshCompaction",
+    // The #1870/#1843 fields were added to FileConfig without updating this
+    // mirror set — configs carrying them were falsely flagged as typos.
+    "releaseNotesCheck", "releaseNotesUrl", "imageTokenCap",
     "compat", "imageBilling", "claude", "native", "resign",
 ]);
 
