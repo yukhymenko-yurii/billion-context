@@ -1113,7 +1113,7 @@ export const WEB_CLIENT = `(function () {
                 }
                 fe.value = val;
             }
-            hydrateQuickConfig();
+            hydrateQuickConfig(cfg);
             const broken = Boolean(cfg.parseError);
             ["cfg-file-edit", "save-file", "save-upstream", "save-quick"].forEach((id) => { const el = $(id); if (el) el.disabled = broken; });
             const ptState = $("pt-state");
@@ -1137,7 +1137,7 @@ export const WEB_CLIENT = `(function () {
             toast(t("toast.failed", { msg: e.message }), "err");
         }
     }
-    function hydrateQuickConfig() {
+    function hydrateQuickConfig(cfg) {
         const box = $("quick-fields");
         if (!box) return;
         box.innerHTML = "";
